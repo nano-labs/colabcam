@@ -16,12 +16,15 @@ DB = Redis(host="127.0.0.1", port=6379, db=0)
 
 db_key = "camera"
 db_frames = "camera-imagens"
+DB.delete(db_key + "_x")
+DB.delete(db_key + "_y")
+DB.delete(db_key + "_z")
 
 # Angulos máximos que a camera pode alcançar
 LIMITS = (180, 180, 100)  # Pan (x), Tilt (y) e Zoom (z)
 
 # Número de pedidos de posição a serem usados na média
-MAX_SIZE = 5
+MAX_SIZE = 1
 
 try:
     SERIAL = serial.Serial('/dev/tty.usbserial-A900abSe', 9600, timeout=1)
@@ -111,7 +114,6 @@ def home_view():
     y = request.args.get("y")
     z = request.args.get("z")
     if x and y and z:
-        print x, y, z
         x, y, z = int(float(x)), int(float(y)), int(float(z))
         Camera.insert_differential(x, y, z)
         Camera.goto_average()
@@ -128,7 +130,7 @@ def home_view():
 def frame_maker(nome):
     """Retorna o frame mais recente."""
     from cStringIO import StringIO
-    f = DB.rpop(db_frames)
+    f = DB.lrange(db_frames, -2, -1)[0]
     dummy = StringIO
     imagem = Image.frombytes('RGB', (720, 480), f)
     arquivo = StringIO()
@@ -172,6 +174,8 @@ def capture():
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
+        Camera.insert(90, 90, 0)
+        Camera.goto_average()
         app.use_reloader = True
         app.debug = True
         app.run(host="0.0.0.0", port=5000, threaded=True)
