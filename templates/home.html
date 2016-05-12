@@ -1,125 +1,146 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<title>Camera</title>
-	<script type="application/javascript" src="{{url_for('static', filename='jquery-2.1.4.js')}}"></script>
-	<style type="text/css">
-		body {
-			background-color: #111111;
-			text-align: center;
-			color: #CCCCCC;
-		}
-		h1 {
-			padding-top: 10px;
-		}
-		#clicker {
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			margin: -240px 0px 0px -360px;
-			width: 720px;
-			height: 480px;
-			border: 1px dashed #AAAAAA;
-			overflow: hidden;
-		}
-		#frame {
-			position: relative;
-		}
-		#zoom {
-			position: absolute;
-			top: 50%;
-			left: 50%;
-			margin: -50px 0px 0px -50px;
-			width: 100px;
-			height: 100px;
-			border: 1px dashed #AAAAAA;
-			cursor: -webkit-zoom-in;
-			cursor: -moz-zoom-in;
-		}
+    <title>Camera</title>
+    <script type="application/javascript" src="{{url_for('static', filename='jquery-2.1.4.js')}}"></script>
+    <style type="text/css">
+        body {
+            background-color: #111111;
+            text-align: center;
+            color: #CCCCCC;
+        }
+        h1 {
+            padding-top: 10px;
+        }
+        #clicker {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -240px 0px 0px -360px;
+            width: 720px;
+            height: 480px;
+            border: 1px dashed #AAAAAA;
+            overflow: hidden;
+        }
+        #frame {
+            position: relative;
+        }
+        #zoom {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -50px 0px 0px -50px;
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #AAAAAA;
+            cursor: -webkit-zoom-in;
+            cursor: -moz-zoom-in;
+        }
 
-	</style>
+    </style>
 </head>
 <body>
-	<h1>Click para explorar</h1>
-	<h2 id="position"></h2>
-	<div id="clicker">
-		<img src="/frame/inicio.png" id="frame"/>
-	</div>
-	<div id="zoom"></div>
-	<button id="zoomout">Zoom Out</button>
-	<script type="text/javascript">
+    <h1>Click para explorar</h1>
+    <h2 id="position"></h2>
+    <div id="clicker">
+        <img src="/frame/inicio.png" id="frame"/>
+    </div>
+    <div id="zoom"></div>
+    <button id="zoomout">Zoom Out</button>
+    <script type="text/javascript">
 
 
 
-	var fov = {"x": 70, "y": 70};
-	var LOCK = false;
+    var fov = {"x": 70, "y": 70};
+    var LOCK = false;
 
-	function moveCamera(X, Y, Z) {
-		if (LOCK == true) {
-			console.log("cooling down");
-			return false;
-		} else {
-	        $.ajax({ 
-		        method: "GET",
-		        url: "?x=" + X + "&y=" + (Y * -1) + "&z=" + Z,
-		        beforeSend: function () {
-		        	LOCK = true
-		        	setTimeout(function(){ LOCK = false; }, 1000);
-		        },
-		        success: function (response) {
-		        	// console.log(response);
-		        	// response.z
-		        	var frame = $("#frame");
-		        	frame.width(720 * (1 + (response.z / 100)));
-		        	frame.height(480 * (1 + (response.z / 100)));
-		        	frame.css("left", "-" + ((frame.width() - 720) / 2) + "px");
-		        	frame.css("top", "-" + ((frame.height() - 480) / 2) + "px");
-		        	$("#position").text("PAN: " + response.x + "° Tilt: " + response.y + "° Zoom: " + response.z + "%");
-		        },
-		        error: function (response) {
-		        	console.log(response);
-		        }
-		    });
-		}
-	}
+    function moveCamera(X, Y, Z) {
+        if (LOCK == true) {
+            console.log("cooling down");
+            return false;
+        } else {
+            $.ajax({ 
+                method: "GET",
+                url: "?x=" + X + "&y=" + (Y * -1) + "&z=" + Z,
+                beforeSend: function () {
+                    LOCK = true
+                    setTimeout(function(){ LOCK = false; }, 1000);
+                },
+                success: function (response) {
+                    // console.log(response);
+                    // response.z
+                    var frame = $("#frame");
+                    frame.width(720 * (1 + (response.z / 100)));
+                    frame.height(480 * (1 + (response.z / 100)));
+                    frame.css("left", "-" + ((frame.width() - 720) / 2) + "px");
+                    frame.css("top", "-" + ((frame.height() - 480) / 2) + "px");
+                    $("#position").text("PAN: " + response.x + "° Tilt: " + response.y + "° Zoom: " + response.z + "%");
+                },
+                error: function (response) {
+                    console.log(response);
+                }
+            });
+        }
+    }
 
-	console.log($("#clicker"));
-	$('#clicker').click(function (e) {
-		var clicker_box = $(this);
+    console.log($("#clicker"));
+    $('#clicker').click(function (e) {
+        var clicker_box = $(this);
 
-		var posX = clicker_box.offset().left;
+        var posX = clicker_box.offset().left;
         var posY = clicker_box.offset().top;
 
-		var x = e.pageX - posX - (clicker_box.width() / 2);
-		var y = e.pageY - posY - (clicker_box.height() / 2);
-		console.log({"x": x, "y": y})
-		var Z = 0;
-		var X = x * (fov.x / 2) / (clicker_box.width() / 2);
-		var Y = y * (fov.y / 2) / (clicker_box.height() / 2);
-		moveCamera(X, Y, Z);
+        var x = e.pageX - posX - (clicker_box.width() / 2);
+        var y = e.pageY - posY - (clicker_box.height() / 2);
+        console.log({"x": x, "y": y})
+        var Z = 0;
+        var X = x * (fov.x / 2) / (clicker_box.width() / 2);
+        var Y = y * (fov.y / 2) / (clicker_box.height() / 2);
+        moveCamera(X, Y, Z);
     });
-	$('#zoom').click(function (e) {
-		var clicker_box = $(this);
-		var Z = 15;
-		var X = 0;
-		var Y = 0;
-		moveCamera(X, Y, Z);
+    $('#zoom').click(function (e) {
+        var clicker_box = $(this);
+        var Z = 15;
+        var X = 0;
+        var Y = 0;
+        moveCamera(X, Y, Z);
     });
-	$('#zoomout').click(function (e) {
-		var clicker_box = $(this);
-		var Z = -25;
-		var X = 0;
-		var Y = 0;
-		moveCamera(X, Y, Z);
+    $('#zoomout').click(function (e) {
+        var clicker_box = $(this);
+        var Z = -25;
+        var X = 0;
+        var Y = 0;
+        moveCamera(X, Y, Z);
     });
 
-	$(document).ready(function () {
-		console.log("hello");
-		$("#frame" ).load(function() {
-			$(this).attr("src", "/frame/" + (new Date).getTime() + ".png")
-		});
-	})
-
+    $(document).ready(function () {
+        console.log("hello");
+        $("#frame" ).load(function() {
+            $(this).attr("src", "/frame/" + (new Date).getTime() + ".png")
+        });
+    })
+    $("#clicker" ).mousemove(function( event ) {
+        var clicker_box = $(this);
+        var x = event.pageX - clicker_box.offset().left;
+        var y = event.pageY - clicker_box.offset().top;
+        if (x < 310 && y < 190) {
+            clicker_box.css("cursor", "nw-resize");
+        } else if (x < 310 && y < 290 && y >= 190) {
+            clicker_box.css("cursor", "w-resize");
+        } else if (x < 310 && y >= 240) {
+            clicker_box.css("cursor", "sw-resize");
+        } else if (x >= 310 && x < 410 && y < 240) {
+            clicker_box.css("cursor", "n-resize");
+        } else if (x >= 410 && y < 190) {
+            clicker_box.css("cursor", "ne-resize");
+        } else if (x >= 410 && y >= 190 && y < 290) {
+            clicker_box.css("cursor", "e-resize");
+        } else if (x >= 410 && y >= 290) {
+            clicker_box.css("cursor", "se-resize");
+        } else {
+            clicker_box.css("cursor", "s-resize");
+        }
+    });
 </script>
 </body>
 </html>
