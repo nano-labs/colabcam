@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Camera</title>
+	<script type="application/javascript" src="{{url_for('static', filename='jquery-2.1.4.js')}}"></script>
+	<style type="text/css">
+		body {
+			background-color: #111111;
+			text-align: center;
+			color: #CCCCCC;
+		}
+		h1 {
+			padding-top: 100px;
+		}
+		#clicker {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			margin: -240px 0px 0px -360px;
+			width: 720px;
+			height: 480px;
+			border: 1px dashed #AAAAAA;
+			overflow: hidden;
+		}
+		#frame {
+			position: relative;
+		}
+
+	</style>
+</head>
+<body>
+	<h1>Click para explorar</h1>
+	<div id="clicker">
+		<img src="/frame/inicio.png" id="frame"/>
+	</div>
+<script type="text/javascript">
+
+	function ajaxGet(url, successCallback, errorCallback, beforeSendFunction) {
+	    if (typeof(errorCallback) == "undefined") {
+	        var errorCallback = function (response) {
+	            console.log(response);
+	            _alert(response.responseJSON.erro);            
+	        }
+	    }
+	    if (typeof(beforeSendFunction) == "undefined") {
+	        var beforeSendFunction = function () {};
+	    }
+	    $.ajax({ 
+	        method: "GET",
+	        url: url,
+	        beforeSend: function () { 
+	            beforeSendFunction()
+	        },
+	        success: function (response) {
+	            successCallback(response)
+	        },
+	        error: function (response) {
+	            errorCallback(response)
+	        }
+	    });
+	}
+
+
+	var fov = {"x": 90, "y": 90};
+	console.log($("#clicker"));
+	$('#clicker').click(function (e) {
+		var clicker_box = $(this);
+
+		var posX = clicker_box.offset().left;
+        var posY = clicker_box.offset().top;
+
+		var x = e.pageX - posX - (clicker_box.width() / 2);
+		var y = e.pageY - posY - (clicker_box.height() / 2);
+
+		var X = x * (fov.x / 2) / (clicker_box.width() / 2);
+		var Y = y * (fov.y / 2) / (clicker_box.height() / 2);
+		if (X < 20 && X > -20) {
+			var Z = 20;
+		} else {
+			var Z = -10;
+		}
+
+        $.ajax({ 
+	        method: "GET",
+	        url: "?x=" + X + "&y=" + (Y * -1) + "&z=" + Z,
+	        beforeSend: function () {
+	        },
+	        success: function (response) {
+	        	console.log(response);
+	        	response.z
+	        	var frame = $("#frame");
+	        	frame.width(720 * (1 + (response.z / 100)));
+	        	frame.height(480 * (1 + (response.z / 100)));
+	        	frame.css("left", "-" + ((frame.width() - 720) / 2) + "px");
+	        	frame.css("top", "-" + ((frame.height() - 480) / 2) + "px");
+
+	        },
+	        error: function (response) {
+	        	console.log(response);
+	        }
+	    });
+    });
+	$(document).ready(function () {
+		console.log("hello");
+		$("#frame" ).load(function() {
+			$(this).attr("src", "/frame/" + (new Date).getTime() + ".png")
+		});
+	})
+
+</script>
+</body>
+</html>
