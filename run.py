@@ -24,7 +24,7 @@ DB.delete(db_key + "_z")
 LIMITS = (180, 180, 100)  # Pan (x), Tilt (y) e Zoom (z)
 
 # Número de pedidos de posição a serem usados na média
-MAX_SIZE = 1
+MAX_SIZE = 5
 
 try:
     SERIAL = serial.Serial('/dev/tty.usbserial-A900abSe', 9600, timeout=1)
