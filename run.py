@@ -133,6 +133,8 @@ def frame_maker(nome):
     f = DB.lrange(db_frames, -2, -1)[0]
     dummy = StringIO
     imagem = Image.frombytes('RGB', (720, 480), f)
+    b, g, r = imagem.split()
+    imagem = Image.merge("RGB", (r, g, b))
     arquivo = StringIO()
     imagem.save(arquivo, "png")
     arquivo.seek(0)
