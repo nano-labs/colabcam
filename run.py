@@ -24,7 +24,7 @@ DB.delete(db_key + "_z")
 LIMITS = (180, 180, 100)  # Pan (x), Tilt (y) e Zoom (z)
 
 # Número de pedidos de posição a serem usados na média
-MAX_SIZE = 5
+MAX_SIZE = 2
 
 try:
     SERIAL = serial.Serial('/dev/tty.usbserial-A900abSe', 9600, timeout=1)
@@ -64,12 +64,12 @@ class Camera:
     @classmethod
     def insert(cls, x, y, z):
         u"""Insere uma posição na lista."""
-        x = x if x >= 0 else 0
-        x = x if x <= LIMITS[0] else LIMITS[0]
-        y = y if y >= 0 else 0
-        y = y if y <= LIMITS[1] else LIMITS[1]
-        z = z if z >= 0 else 0
-        z = z if z <= LIMITS[2] else LIMITS[2]
+        # x = x if x >= 0 else 0
+        # x = x if x <= LIMITS[0] else LIMITS[0]
+        # y = y if y >= 0 else 0
+        # y = y if y <= LIMITS[1] else LIMITS[1]
+        # z = z if z >= 0 else 0
+        # z = z if z <= LIMITS[2] else LIMITS[2]
         cls.axis_insert("x", x)
         cls.axis_insert("y", y)
         cls.axis_insert("z", z)
@@ -92,6 +92,11 @@ class Camera:
     @classmethod
     def goto(cls, x, y):
         u"""Move a câmera para a posição X, Y."""
+        x = x if x >= 0 else 0
+        x = x if x <= LIMITS[0] else LIMITS[0]
+        y = y if y >= 0 else 0
+        y = y if y <= LIMITS[1] else LIMITS[1]
+
         s = '%03d%03de' % (x, y)
         SERIAL.write(s)
 
@@ -99,7 +104,12 @@ class Camera:
     def goto_average(cls):
         u"""Move a camera para a posição média."""
         x, y, z = cls.position()
+        x = x if x >= 0 else 0
+        x = x if x <= LIMITS[0] else LIMITS[0]
+        y = y if y >= 0 else 0
+        y = y if y <= LIMITS[1] else LIMITS[1]
         cls.goto(x, y)
+        return x, y, z
 
 app = Flask(__name__)
 app.secret_key = 's3cr3t'
@@ -124,6 +134,52 @@ def home_view():
     context = {}
     return render_template('home.html', **context), 200
     # return jsonify({}), 200
+
+
+@home.route('/mobile', methods=['GET'])
+def mobile_view():
+    """Home."""
+    x = request.args.get("x", "")
+    y = request.args.get("y", "")
+    z = request.args.get("z", "")
+    if z and y:
+        x = int(float(z))
+        # x = x if x >= 0 else 0
+        # x = x if x <= LIMITS[0] else LIMITS[0]
+
+        y = int(float(y))
+        if y < 0:
+            y = 180 + y
+        print "X: %s\t\tY: %s" % (x, y)
+        Camera.insert(x, y, 0)
+        X, Y, Z = Camera.goto_average()
+        return jsonify({"x": int(X), "y": Y, "z": Z}), 200
+
+    context = {}
+    return render_template('mobile.html', **context), 200
+
+
+@home.route('/cardboard', methods=['GET'])
+def cardboard_view():
+    """Home."""
+    x = request.args.get("x", "")
+    y = request.args.get("y", "")
+    z = request.args.get("z", "")
+    if z and y:
+        x = int(float(z))
+        # x = x if x >= 0 else 0
+        # x = x if x <= LIMITS[0] else LIMITS[0]
+
+        y = int(float(y))
+        if y < 0:
+            y = 180 + y
+        print "X: %s\t\tY: %s" % (x, y)
+        Camera.insert(x, y, 0)
+        X, Y, Z = Camera.goto_average()
+        return jsonify({"x": int(X), "y": Y, "z": Z}), 200
+
+    context = {}
+    return render_template('cardboard.html', **context), 200
 
 
 @home.route('/frame/<nome>', methods=['GET'])

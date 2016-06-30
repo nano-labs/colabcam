@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+    <script type="application/javascript" src="{{url_for('static', filename='jquery-2.1.4.js')}}"></script>
+    <style type="text/css">
+        body {
+            background-color: #111111;
+            text-align: center;
+            color: #00FF00;
+        }
+        h1 {
+            padding-top: 0px;
+        }
+        #clicker {
+            position: absolute;
+/*            top: 50%;
+            left: 50%;*/
+            /*margin: -240px 0px 0px -360px;*/
+/*            width: 720px;
+            height: 480px;*/
+            width: 100%;
+            height: 100%;
+            /*border: 1px dashed #AAAAAA;*/
+            overflow: hidden;
+        }
+        #frame {
+            position: relative;
+            /*width: 100%;*/
+            /*height: 100%;*/
+        }
+        #zoom {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin: -50px 0px 0px -50px;
+            width: 100px;
+            height: 100px;
+            border: 1px dashed #AAAAAA;
+            cursor: -webkit-zoom-in;
+            cursor: -moz-zoom-in;
+        }
+        #xhud {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+        }
+        #yhud {
+            position: fixed;
+            bottom: 0px;
+            left: 0px;
+        }
+        #xxx {
+            position: fixed;
+            bottom: 40px;
+            right: 10px;
+            font-size: 30px;
+        }
+        #xxx-gyro {
+            position: fixed;
+            bottom: 70px;
+            right: 10px;
+            font-size: 15px;
+            color: #FF0000;
+        }
+        #yyy {
+            position: fixed;
+            top: 10px;
+            left: 40px;
+            font-size: 30px;
+        }
+        #yyy-gyro {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            font-size: 15px;
+            color: #FF0000;
+        }
+    </style>
+
+</head>
+<body>
+    <div id="clicker">
+        <img src="/frame/inicio.png" id="frame"/>
+        <img id="xhud" src="{{url_for('static', filename='xhud.png')}}">
+        <img id="yhud" src="{{url_for('static', filename='yhud.png')}}">
+        <span id="xxx"></span><br>
+    	<span id="xxx-gyro"></span><br>
+        <span id="yyy"></span><br>
+        <span id="yyy-gyro"></span><br>
+    </div>
+</body>
+<script type="text/javascript">
+var LOCK = false;
+function tilt(bla) {
+    var x = (360 - Math.round(bla[2]));
+    var y = (Math.round(bla[1]) * -1);
+    if (y < 0) {
+        y = (180 + y)
+        x = x - 180
+    }
+    $("#xxx-gyro").text(x + "°");
+    $("#yyy-gyro").text(y + "°");
+    if (LOCK == true) {
+            console.log("cooling down");
+            return false;
+    } else {
+		$.ajax({ 
+	        method: "GET",
+	        url: "?x=" + bla[0] + "&y=" + y + "&z=" + x,
+	        beforeSend: function () {
+	            LOCK = true
+	            setTimeout(function(){ LOCK = false; }, 100);
+	        },
+	        success: function (response) {
+	            console.log(response);
+                $("#xxx").text(response.x + "°");
+                $("#xhud").animate({left: (response.x * -13)}, 100);
+                $("#yyy").text(response.y + "°");
+                $("#yhud").animate({bottom: (response.y * -13)}, 100);
+	        },
+	        error: function (response) {
+	            console.log(response);
+	        }
+	    });
+	}
+
+
+
+}
+if (window.DeviceOrientationEvent) {
+    window.addEventListener("deviceorientation", function () {
+
+        tilt([event.beta, event.gamma, event.alpha]);
+    }, true);
+} else if (window.DeviceMotionEvent) {
+    window.addEventListener('devicemotion', function () {
+        tilt([event.acceleration.x * 2, event.acceleration.y * 2, event.acceleration.z * 2]);
+    }, true);
+} else {
+    window.addEventListener("MozOrientation", function () {
+        tilt([orientation.x * 50, orientation.y * 50, orientation.z * 50]);
+    }, true);
+}
+    $(document).ready(function () {
+        console.log("hello");
+        $("#frame" ).load(function() {
+            $(this).attr("src", "/frame/" + (new Date).getTime() + ".png")
+        });
+    })
+</script>
+</html>
